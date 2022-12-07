@@ -14,6 +14,7 @@
       <th>제목</th>
       <th>작성시간</th>
       <th>조회수</th>
+      <th>파일유무(있음=1, 없음=0)</th>
     </tr>
     <tr th:each="board: ${boardList}">
       <td th:text="${board.id}"></td>
@@ -25,6 +26,7 @@
 <!--      <td th:text="${board.boardContents}"></td>-->
       <td th:text="*{#temporals.format(board.boardCreatedTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
       <td th:text="${board.boardHits}"></td>
+      <td th:text="${board.fileAttached}"></td>
 
     </tr>
 

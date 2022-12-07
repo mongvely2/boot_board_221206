@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>boardDetail</title>
     <link rel="stylesheet" th:href="@{/css/bootstrap.rtl.min.css}">
+    <script th:src="@{/js/axios.min.js}"></script>
+    <!--    <script src="/js/jquery.js"></script>-->
 </head>
 <body>
 <div class="container">
@@ -20,10 +22,10 @@
             <th>제목</th>
             <td th:text="${board.boardTitle}"></td>
         </tr>
-        <!--    <tr>-->
-        <!--      <th>비밀번호</th>-->
-        <!--      <td th:text="${board.boardPass}"></td>-->
-        <!--    </tr>-->
+        <tr>
+            <th>비밀번호</th>
+            <td th:text="${board.boardPass}"></td>
+        </tr>
         <tr>
             <th>내용</th>
             <td th:text="${board.boardContents}"></td>
@@ -32,9 +34,113 @@
             <th>조회수</th>
             <td th:text="${board.boardHits}"></td>
         </tr>
+        <tr>
+            <th>작성시간</th>
+            <td th:text="${board.boardCreatedTime}"></td>
+        </tr>
+        <tr>
+            <th>파일유무(있음=1, 없음=0)</th>
+            <td th:text="${board.fileAttached}"></td>
+        </tr>
+        <tr th:if="${board.fileAttached == 1}">
+            <th>image</th>
+<!--         WebConfig 설정 클래스 생성하여 정리해줘야 함       -->
+            <td><img th:src="@{|/upload/${board.storedFileName}}" alt=""> </td>
+        </tr>
+
     </table>
     <a href="/" class="btn btn-primary">홈이동</a>
+    <button class="btn btn-primary" th:onclick="listReq()">목록</button>
+    <button class="btn btn-primary" th:onclick="updateReq()">수정(화면요청)</button>
+    <button class="btn btn-primary" th:onclick="deleteReq()">삭제(axios/delete)</button>
+    <button class="btn btn-primary" th:id="deleteBt" th:onclick="deleteFn()">삭제(get)</button>
+
+    <button class="btn btn-warning" onclick="req('update')">수정</button>
+    <button class="btn btn-danger" onclick="req('delete')">삭제</button>
+</div>
+<div id="pass-check" class="container">
 </div>
 
+</div>
 </body>
+<script th:inline="javascript">
+
+    const req = (value) => {
+        console.log("value값:", value)
+        const passCheckArea = document.getElementById("pass-check");
+        //  innerHtml 활용하여 함수실행시 변수를 활용하여 실행할 기능을 텍스트로 보낸다
+        //  value를 싱글쿼티(')로 묶어준다
+        passCheckArea.innerHTML = "<input type=\"text\" id=\"password\" placeholder=\"password\">\n" +
+            "    <button onclick=\"passCheck('" + value + "')\" class=\"btn btn-outline-dark\">확인</button>";
+    }
+
+    const passCheck = (value) => {
+        console.log("2번째:", value)
+        const password = document.getElementById("password").value;
+        const passDB = [[${board.boardPass}]];
+        const id = [[${board.id}]];
+        if (password == passDB) {
+            if (value == "update") {
+                location.href = "/board/update/" + id;
+            } else if (value == "delete") {
+                // location.href = "/board/delete/" + id;
+                if (confirm("해당 글을 삭제하시겠습니까?")) {
+                    axios({
+                        method: "delete",
+                        url: "/board/" + id
+                    }).then(res => {
+                        alert("삭제 완료")
+                        location.href = "/board/";
+                    }).catch(res => {
+                        alert("삭제 실패")
+                    })
+                } else {
+                    alert("삭제 취소")
+                }
+            }
+        } else {
+            alert("비밀번호가 일치하지 않습니다")
+        }
+    }
+
+    // 위 까지 버튼 클릭시 input창 보이기
+
+    const listReq = () => {
+        location.href = "/board/";
+    }
+
+    const updateReq = () => {
+        console.log("수정요청")
+        const id = [[${board.id}]]
+        location.href = "/board/update/" + id;
+    }
+
+    const deleteReq = () => {
+        const id = [[${board.id}]]
+        if (confirm("해당 글을 삭제하시겠습니까?")) {
+            axios({
+                method: "delete",
+                url: "/board/" + id
+            }).then(res => {
+                alert("삭제 완료")
+                location.href = "/board/";
+            }).catch(res => {
+                alert("삭제 실패")
+            })
+        } else {
+            alert("삭제 취소")
+        }
+
+    }
+    const deleteFn = () => {
+        console.log("삭제호출")
+        const id = [[${board.id}]]
+        if (confirm("삭제하시겠습니까?")) {
+            location.href = "/board/delete/" + id;
+            alert("삭제완료")
+        } else {
+            alert("삭제취소")
+        }
+    }
+</script>
 </html>

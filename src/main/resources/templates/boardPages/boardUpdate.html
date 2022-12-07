@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>boardUpdate</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.rtl.min.css}">
+<!--    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>-->
+    <script th:src="@{/js/axios.min.js}"></script>
+</head>
+<body>
+<div class="container">
+    <form action="/board/update" name="updateForm" method="post">
+        <!--        id, boardPass null 방지를 위해 hidden 으로 데이터 전송   -->
+        <input type="hidden" name="id" th:value="${board.id}" class="form-control">
+        <input type="hidden" name="boardHits" th:value="${board.boardHits}" class="form-control">
+
+        작성자: <input type="text" name="boardWriter" th:value="${board.boardWriter}" class="form-control">
+        비밀번호: <input type="text" name="boardPass" th:value="${board.boardPass}" id="boardPass" class="form-control">
+        제목: <input type="text" name="boardTitle" th:value="${board.boardTitle}" class="form-control">
+        <!--        textarea 에서 model로 넘겨준 거 출력할 땐 th:text로 선언하여 출력 -> value 아님!!!!!    -->
+        내용: <textarea type="text" name="boardContents" th:text="${board.boardContents}" class="form-control"></textarea>
+        <input type="button" value="수정(post)" onclick="updateBt()" class="btn btn-primary">
+        <input type="button" value="수정(axios/put)" onclick="updateAxios()" class="btn btn-primary">
+    </form>
+</div>
+</body>
+<script th:inline="javascript">
+    const updateBt = () => {
+        const passDB = [[${board.boardPass}]];
+        const pass = document.getElementById("boardPass").value;
+        if (passDB == pass) {
+            if (confirm("수정하시겠습니까?")) {
+                document.updateForm.submit();
+                alert("수정되었습니다")
+            } else {
+                alert("취소되었습니다")
+            }
+        } else {
+            alert("비밀번호가 일치하지 않습니다")
+        }
+    }
+
+    const updateAxios = () => {
+        // querySelector: class=. / id=#  / ex: querySelector(#id명 or .class명).value;
+        // const id = document.querySelector('input[name="id"]').value;
+        // const pass = document.querySelector('input[name="boardPass"]').value;
+        // const writer = document.querySelector('input[name="boardWriter"]').value;
+        // const title = document.querySelector('input[name="boardTitle"]').value;
+        // const contents = document.querySelector('input[name="boardContents"]').value;
+        // const hits = document.querySelector('input[name="boardHits"]').value;
+        const passDB = [[${board.boardPass}]];
+
+        const id = document.getElementsByName("id")[0].value;
+        const pass = document.getElementsByName("boardPass")[0].value;
+        const writer = document.getElementsByName("boardWriter")[0].value;
+        const title = document.getElementsByName("boardTitle")[0].value;
+        const contents = document.getElementsByName("boardContents")[0].value;
+        const hits = document.getElementsByName("boardHits")[0].value;
+
+        if (passDB == pass) {
+            axios({
+                method: "put",
+                url: "/board/" + id,
+                data: {
+                    id: id,
+                    boardPass: pass,
+                    boardWriter: writer,
+                    boardTitle: title,
+                    boardContents: contents,
+                    boardHits: hits
+                }
+            }).then(res => {
+                console.log("수정성공")
+                location.href = "/board/"+id;
+            }).catch(res => {
+                console.log("수정실패")
+            })
+        } else {
+            alert("비밀번호가 일치하지 않습니다")
+        }
+    }
+
+</script>
+</html>
