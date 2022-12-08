@@ -80,7 +80,7 @@ public class BoardTest {
     public void findTest() {
 //        파일이 첨부된 게시글 조회
         BoardEntity boardEntity = boardRepository.findById(37L).get();
-//        첨부파일의 oritinalFileName 조회
+//        첨부파일의 originalFileName 조회
         System.out.println("boardEntity.getBoardFileEntityList() = " + boardEntity.getBoardFileEntityList().get(0).getOriginalFileName());
 //        native query 에서는 조인 쿼리 사용함
 //

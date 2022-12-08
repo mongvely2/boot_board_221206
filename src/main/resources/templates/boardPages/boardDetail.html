@@ -5,6 +5,8 @@
     <title>boardDetail</title>
     <link rel="stylesheet" th:href="@{/css/bootstrap.rtl.min.css}">
     <script th:src="@{/js/axios.min.js}"></script>
+    <script th:src="@{/js/jquery.js}"></script>
+
     <!--    <script src="/js/jquery.js"></script>-->
 </head>
 <body>
@@ -45,7 +47,10 @@
         <tr th:if="${board.fileAttached == 1}">
             <th>image</th>
 <!--         WebConfig 설정 클래스 생성하여 정리해줘야 함       -->
-            <td><img th:src="@{|/upload/${board.storedFileName}}" alt=""> </td>
+<!--            <td><img th:src="@{|/upload/${board.storedFileName}}" alt=""> </td>-->
+            <td th:each="fileName: ${board.storedFileName}">
+                <img th:src="@{|/upload/${fileName}}" alt="" width="300" height="300">
+            </td>
         </tr>
 
     </table>
@@ -61,9 +66,68 @@
 <div id="pass-check" class="container">
 </div>
 
+<div class="container mt-5" id="comment-write">
+    <div class="input-group-sm mb-3">
+        <div class="form-floating">     <!-- input 안으로 label이 들어감(클릭시 글자 움직임)-->
+            <input type="text" id="commentWriter" placeholder="작성자" class="form-control" >
+            <label for="commentWriter">작성자</label>
+        </div>
+        <div class="form-floating">
+            <input type="text" id="commentContents" placeholder="내용" class="form-control">
+            <label for="commentContents">내용</label>
+        </div>
+        <button id="comment-write-btn" class="btn btn-secondary" onclick="commentWrite()">댓글작성</button>
+    </div>
+
 </div>
+
 </body>
 <script th:inline="javascript">
+    const commentWrite = () => {
+        const writer = document.getElementById("commentWriter").value;
+        const contents = document.getElementById("commentContents").value;
+        const board = [[${board.id}]];
+        console.log(writer)
+        $.ajax({
+            type: "post",
+            url: "/comment/save",
+            data: {
+                commentWriter: writer,
+                commentContents: contents,
+                boardId: board
+            },
+            dataType: "json",
+            success: function (commentList) {
+                let output = "<table class='table'>";
+                // == 넣을시 최종 마지막에 입력한 값만 나옴, += 사용시 누적해서 데이터 쌓임
+                output += "<tr><th>댓글번호</th>";
+                output += "<th>작성자</th>";
+                output += "<th>내용</th>";
+                output += "<th>작성시간</th></tr>";
+                // i=인덱스 같은 역할, 반복변수로 활용
+                for (let i in commentList) {
+                    output += "<tr>";
+                    output += "<td>" + commentList[i].id + "</td>";
+                    output += "<td>" + commentList[i].commentWriter + "</td>";
+                    output += "<td>" + commentList[i].commentContents + "</td>";
+                    // moment: 자바스크립트에서 제공하는 라이브러리 날짜값 사용하는 함수
+                    output += "<td>" + moment(commentList[i].commentCreatedDate).format("YYYY-MM-DD HH:mm:ss") + "</td>";
+                    output += "</tr>";
+                }
+                output += "</table>";
+
+                document.getElementById('comment-list').innerHTML = output;
+                // 새로 작성하는 칸을 위해 공란으로 표시
+                document.getElementById('commentWriter').value = '';
+                document.getElementById('commentContents').value = '';
+
+            },
+            error: function () {
+                console.log("실패");
+            }
+        });
+
+    }
 
     const req = (value) => {
         console.log("value값:", value)
