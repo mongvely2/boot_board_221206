@@ -3,6 +3,7 @@ package com.its.board.dto;
 import com.its.board.entity.BoardEntity;
 import com.its.board.entity.BoardFileEntity;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class BoardDTO {
     private Long id;
     private String boardWriter;
@@ -30,6 +32,17 @@ public class BoardDTO {
     private List<String> originalFileName;
     private List<String> storedFileName;
     private int fileAttached;
+
+//    페이징 목록 변환을 위한 생성자 -> 페이징으로 목록에 무엇을 보여줄건지 필드
+//    boardTitle, boardHits, boardWriter, id, boardHits, boardCreatedTime
+//    생성자 자동으로 생성하는 단축키: alt+insert -> costructor
+    public BoardDTO(Long id, String boardWriter, String boardTitle, LocalDateTime boardCreatedTime, int boardHits) {
+        this.id = id;
+        this.boardWriter = boardWriter;
+        this.boardTitle = boardTitle;
+        this.boardCreatedTime = boardCreatedTime;
+        this.boardHits = boardHits;
+    }
 
     public static BoardDTO toDTO(BoardEntity boardEntity) {
         BoardDTO boardDTO = new BoardDTO();

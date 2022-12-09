@@ -1,8 +1,13 @@
 package com.its.board.controller;
 
 import com.its.board.dto.BoardDTO;
+import com.its.board.dto.CommentDTO;
 import com.its.board.service.BoardService;
+import com.its.board.service.CommentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -17,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BoardController {
     private final BoardService boardService;
+    private final CommentService commentService;
 
     @GetMapping("/save")
     public String saveForm() {
@@ -38,11 +44,50 @@ public class BoardController {
         return "boardPages/boardList";
     }
 
+//     /board?page=1
+    @GetMapping
+//    Pageble 임포트시 반드시 org.springframework.data.domain 로 선택할것!!!!
+//    PageableDefault 를 사용했기 때문에 매개변수 없이 기본값을 세팅하여 넘겨줄 수 있음
+//    실제로 html(뷰단)에서 넘겨주는 매개변수 없음
+    public String paging(@PageableDefault(page = 1)Pageable pageable,
+                         Model model) {
+        System.out.println("pageable. = " + pageable.getPageNumber());
+        Page<BoardDTO> boardDTOList = boardService.paging(pageable);
+        model.addAttribute("boardList", boardDTOList);
+//        start 페이지 end 페이지 계산방식 -> 삼항연산자 사용
+//        int nowPage = boardDTOList.getNumber();
+        int blockLimit = 3;
+        int startPage = (((int)(Math.ceil((double)pageable.getPageNumber() / blockLimit))) - 1) * blockLimit + 1;
+        int endPage = ((startPage + blockLimit - 1) < boardDTOList.getTotalPages()) ? startPage + blockLimit - 1 : boardDTOList.getTotalPages();
+//        삼항연산자 = if/else 를 간단하게 작성한 것, 아래는 풀이를 위한 코드임(기능구현 상관x)
+        int test = 10;
+        int num = (test > 5) ? test: 100;    // 아래 if문이랑 똑같음
+        if (test > 5) {
+            num = test;
+        } else {
+            num = 100;
+        }
+//        model.addAttribute("pageable", nowPage);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        return "boardPages/paging";
+    }
+
+
     @GetMapping("/{id}")
     public String findById(@PathVariable Long id,
+                           @RequestParam(value = "page", required = false, defaultValue = "1") int page,
                            Model model) {
         boardService.updateHits(id);
         BoardDTO boardDTO = boardService.findById(id);
+
+        List<CommentDTO> commentDTOList = commentService.findAll(id);
+        if (commentDTOList.size() > 0) {
+            model.addAttribute("commentList", commentDTOList);
+        } else {
+            model.addAttribute("commentList", "empty");
+        }
+        model.addAttribute("page", page);
         model.addAttribute("board", boardDTO);
         return "boardPages/boardDetail";
     }

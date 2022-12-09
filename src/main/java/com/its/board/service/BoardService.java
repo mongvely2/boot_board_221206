@@ -6,6 +6,9 @@ import com.its.board.entity.BoardFileEntity;
 import com.its.board.repository.BoardFileRepository;
 import com.its.board.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +28,7 @@ public class BoardService {
 
     public Long save(BoardDTO boardDTO) throws IOException {
 //        if (boardDTO.getBoardFile().isEmpty()) {      // 단수형 파일 업로드: isEmpty 사용
-        if (boardDTO.getBoardFile().size() == 0) {      // 다중 파일 업로드: size 사용
+        if (boardDTO.getBoardFile() == null || boardDTO.getBoardFile().size() == 0) {      // 다중 파일 업로드: size 사용
             System.out.println("파일없음");
             BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO);
             return boardRepository.save(boardEntity).getId();
@@ -110,5 +113,24 @@ public class BoardService {
     public void update(BoardDTO boardDTO) {
         BoardEntity boardEntity = BoardEntity.toUpdateEntity(boardDTO);
         boardRepository.save(boardEntity);
+    }
+
+    public Page<BoardDTO> paging(Pageable pageable) {
+//        page: (하단에 표시되는) 해당 page(배열처럼 0번이 1번임) / pageLimit: 보여줄 한 페이지에서의 게시글 수
+        int page = pageable.getPageNumber() -1;
+        final int pageLimit = 3;
+//        Page<> : 스프링에서 제공하는 인터페이스 / List<> 랑 헷갈리면 안 됨
+        Page<BoardEntity> boardEntities = boardRepository.findAll(PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
+        Page<BoardDTO> boardList = boardEntities.map(
+//                boardEntities에 담긴 boardEntity 객체를 board에 담아서
+//                boardDTO 객체로 하나씩 옮겨 담는 과정
+                board -> new BoardDTO(board.getId(),
+                        board.getBoardWriter(),
+                        board.getBoardTitle(),
+                        board.getCreatedTime(),
+                        board.getBoardHits()
+                )
+        );
+        return boardList;
     }
 }
