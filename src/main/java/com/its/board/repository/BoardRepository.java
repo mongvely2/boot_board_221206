@@ -19,4 +19,15 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Long> {
 //    @Query(value = "update board_table set board_hits=board_hits+1 where id=:paramId", nativeQuery = true)
     void updateHits(@Param("paramId") Long id);
 
+
+//        select * from board_table where board_writer like '%q%' order by id desc; // 작성자 기준 검색어
+    List<BoardEntity> findByBoardWriterContainingOrderByIdDesc(String q);
+
+//        select * from board_table where board_title like '%q%' order by id desc; // 제목 기준 검색어
+    List<BoardEntity> findByBoardTitleContainingOrderByIdDesc(String q);
+
+//        select * from board_table where board_title like '%q%' or board_writer like '%q%' order by id desc; // 제목, 작성자 기준 검색어(통합검색)
+    List<BoardEntity> findByBoardTitleContainingOrBoardWriterContainingOrderByIdDesc(String title, String writer);
+//      쿼리상 q 라는 매개변수가 같은 값이긴 하지만 2개의 변수가 들어가기 때문에 매개변수를 2개 지정해줘야함
+
 }

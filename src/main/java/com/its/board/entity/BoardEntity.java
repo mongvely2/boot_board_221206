@@ -36,6 +36,11 @@ public class BoardEntity extends BaseEntity {
     @Column
     private int fileAttached;   // 파일있음:1, 파일없음:0
 
+//    회원-게시글 연관관계
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private MemberEntity memberEntity;
+
 //    BoardFileEntity와 참조관계 / 1:N 관계(게시글:파일)
 //    1:N 관계에서 사용하는 어노테이션=OneToMany
 //    mappedBy = "자식테이블 필드명(private BoardEntity 'boardEntity' <- BoardFileEntity 클래스에서 이거)
@@ -50,7 +55,7 @@ public class BoardEntity extends BaseEntity {
     @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CommentEntity> commentEntityList = new ArrayList<>();
 
-    public static BoardEntity toSaveEntity(BoardDTO boardDTO) {
+    public static BoardEntity toSaveEntity(BoardDTO boardDTO, MemberEntity memberEntity) {
         BoardEntity boardEntity = new BoardEntity();
         boardEntity.setBoardWriter(boardDTO.getBoardWriter());
         boardEntity.setBoardTitle(boardDTO.getBoardTitle());
@@ -59,9 +64,10 @@ public class BoardEntity extends BaseEntity {
 //        조회수 기본값을 메서드에서 설정하기 -> 컬럼에서 주는 방법도 있긴 함
         boardEntity.setBoardHits(0);
         boardEntity.setFileAttached(0);
+        boardEntity.setMemberEntity(memberEntity);
         return boardEntity;
     }
-    public static BoardEntity toSaveFileEntity(BoardDTO boardDTO) {
+    public static BoardEntity toSaveFileEntity(BoardDTO boardDTO, MemberEntity memberEntity) {
         BoardEntity boardEntity = new BoardEntity();
         boardEntity.setBoardWriter(boardDTO.getBoardWriter());
         boardEntity.setBoardTitle(boardDTO.getBoardTitle());
@@ -69,9 +75,11 @@ public class BoardEntity extends BaseEntity {
         boardEntity.setBoardContents(boardDTO.getBoardContents());
         boardEntity.setBoardHits(0);
         boardEntity.setFileAttached(1);
+        boardEntity.setMemberEntity(memberEntity);
         return boardEntity;
     }
 
+//    update 처리할 때도 memberEntity 객체를 고려해야함(여기엔 기능적용 안 됨)
     public static BoardEntity toUpdateEntity(BoardDTO boardDTO) {
         BoardEntity boardEntity = new BoardEntity();
         boardEntity.setId(boardDTO.getId());

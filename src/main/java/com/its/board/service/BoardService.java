@@ -3,8 +3,10 @@ package com.its.board.service;
 import com.its.board.dto.BoardDTO;
 import com.its.board.entity.BoardEntity;
 import com.its.board.entity.BoardFileEntity;
+import com.its.board.entity.MemberEntity;
 import com.its.board.repository.BoardFileRepository;
 import com.its.board.repository.BoardRepository;
+import com.its.board.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,12 +27,15 @@ import java.util.Optional;
 public class BoardService {
     private final BoardRepository boardRepository;
     private final BoardFileRepository boardFileRepository;
+    private final MemberRepository memberRepository;
 
     public Long save(BoardDTO boardDTO) throws IOException {
+        MemberEntity memberEntity = memberRepository.findByMemberEmail(boardDTO.getBoardWriter()).get();
+
 //        if (boardDTO.getBoardFile().isEmpty()) {      // 단수형 파일 업로드: isEmpty 사용
         if (boardDTO.getBoardFile() == null || boardDTO.getBoardFile().size() == 0) {      // 다중 파일 업로드: size 사용
             System.out.println("파일없음");
-            BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO);
+            BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO, memberEntity);
             return boardRepository.save(boardEntity).getId();
 //            return boardRepository.save(BoardEntity.toSaveEntity(boardDTO)).getId();
         } else {
@@ -55,12 +60,12 @@ public class BoardService {
 
 //          게시글 정보를 먼저 저장하고 해당 게시글의 entity를 가져옴
             System.out.println("파일있음");
-            BoardEntity boardEntity = BoardEntity.toSaveFileEntity(boardDTO);
+            BoardEntity boardEntity = BoardEntity.toSaveFileEntity(boardDTO, memberEntity);
             Long savedId = boardRepository.save(boardEntity).getId();
             BoardEntity entity = boardRepository.findById(savedId).get();
 //            파일이 담긴 list를 반복문으로 접근하여 하나씩 이름 가져오고, 저장용 이름 만들고
 //            로컬 경로에 저장하고 board_file_table에 저장
-            for (MultipartFile boardFile: boardDTO.getBoardFile()) {
+            for (MultipartFile boardFile : boardDTO.getBoardFile()) {
 //          MultipartFile boardFile = boardDTO.getBoardFile();  ->  단수일 때 한번만 했던것을 위처럼 반복문으로 진행
                 String originalFileName = boardFile.getOriginalFilename();
                 String storedFileName = System.currentTimeMillis() + "_" + originalFileName;
@@ -76,7 +81,7 @@ public class BoardService {
 
     @Transactional  // 부모엔티티에서 자식엔티티를 직접 가져올 때 필요한 어노테이션
     public List<BoardDTO> findAll() {
-        List<BoardEntity> boardEntityList = boardRepository.findAll(Sort.by(Sort.Direction.DESC,"createdTime"));
+        List<BoardEntity> boardEntityList = boardRepository.findAll(Sort.by(Sort.Direction.DESC, "createdTime"));
         List<BoardDTO> boardDTOList = new ArrayList<>();
         for (BoardEntity boardEntity : boardEntityList) {
             boardDTOList.add(BoardDTO.toDTO(boardEntity));
@@ -117,7 +122,7 @@ public class BoardService {
 
     public Page<BoardDTO> paging(Pageable pageable) {
 //        page: (하단에 표시되는) 해당 page(배열처럼 0번이 1번임) / pageLimit: 보여줄 한 페이지에서의 게시글 수
-        int page = pageable.getPageNumber() -1;
+        int page = pageable.getPageNumber() - 1;
         final int pageLimit = 3;
 //        Page<> : 스프링에서 제공하는 인터페이스 / List<> 랑 헷갈리면 안 됨
         Page<BoardEntity> boardEntities = boardRepository.findAll(PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
@@ -132,5 +137,25 @@ public class BoardService {
                 )
         );
         return boardList;
+    }
+
+    public List<BoardDTO> search(String type, String q) {
+//        작성자 검색
+//        select * from board_table where board_writer like '%q%';
+        List<BoardDTO> boardDTOList = new ArrayList<>();
+        List<BoardEntity> boardEntityList = null;
+        if (type.equals("boardWriter")) {
+            boardEntityList = boardRepository.findByBoardWriterContainingOrderByIdDesc(q);
+        } else if (type.equals("boardTitle")) {
+            boardEntityList = boardRepository.findByBoardTitleContainingOrderByIdDesc(q);
+        } else {
+            boardEntityList = boardRepository.findByBoardTitleContainingOrBoardWriterContainingOrderByIdDesc(q, q);
+        }
+
+        for (BoardEntity boardEntity : boardEntityList) {
+            boardDTOList.add(BoardDTO.toDTO(boardEntity));
+        }
+
+        return boardDTOList;
     }
 }
