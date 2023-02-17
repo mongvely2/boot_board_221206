@@ -89,6 +89,7 @@ public class BoardController {
         }
         model.addAttribute("page", page);
         model.addAttribute("board", boardDTO);
+        System.out.println("boardDTO = " + boardDTO);
         return "boardPages/boardDetail";
     }
 

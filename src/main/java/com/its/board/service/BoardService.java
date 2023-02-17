@@ -66,7 +66,8 @@ public class BoardService {
 //            파일이 담긴 list를 반복문으로 접근하여 하나씩 이름 가져오고, 저장용 이름 만들고
 //            로컬 경로에 저장하고 board_file_table에 저장
             for (MultipartFile boardFile : boardDTO.getBoardFile()) {
-//          MultipartFile boardFile = boardDTO.getBoardFile();  ->  단수일 때 한번만 했던것을 위처럼 반복문으로 진행
+//          MultipartFile boardFile = boardDTO.getBoardFile();
+//          ->  단수일 때 한번만 했던것을 위처럼 반복문으로 진행
                 String originalFileName = boardFile.getOriginalFilename();
                 String storedFileName = System.currentTimeMillis() + "_" + originalFileName;
                 String savePath = "D:\\boot_board_img\\" + storedFileName;

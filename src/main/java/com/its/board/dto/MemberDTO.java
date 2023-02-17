@@ -11,7 +11,8 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 
-public class MemberDTO {private Long id;
+public class MemberDTO {
+    private Long id;
     private String memberEmail;
     private String memberPassword;
     private String memberName;
